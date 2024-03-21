@@ -1,0 +1,61 @@
+# 2234. Maximum Total Beauty of the Gardens
+# We will sort the gardens to have the small values in front and big values in the end.
+# We will first remove as many full gardens as possible.
+# We will then spend all the remaining newFlowers to increase the minimum
+# We will then return the removed gardens one by one and repeat the previous step to find the max beauty at each step.
+from typing import List
+
+
+class Solution:
+    def maximumBeauty(self, flowers: List[int], new: int, target: int, full: int, partial: int) -> int:
+        flowers.sort()
+
+        #Remove all already full gardens
+        count = 0
+        while flowers and flowers[-1] >= target:
+            count += 1
+            flowers.pop()
+
+        #Complete as many gardens as possible
+        stack = []
+        while flowers and newFlowers >= target - flowers[-1]:
+            stack.append(max(0, target - flowers.pop()))
+            newFlowers -= stack[-1]
+        
+        mini = 0
+        i = 0
+        #Spend all available newFlowers 
+        if flowers:
+            while i < len(flowers) and (flowers[i] - mini) * i <= newFlowers:
+                newFlowers -= (flowers[i] - mini) * i
+                mini = flowers[i]
+                i += 1
+            mini += newFlowers // i
+            newFlowers %= i
+        
+        #Max beauty
+        maxi = (count + len(stack)) * full + mini * partial
+
+        while stack:
+
+            #Unplant flowers from one of the completed gardens
+            newFlowers += stack[-1]
+            flowers.append(target - stack.pop())
+
+            #Reduce mini to match the added garden if necessary
+            if flowers[-1] < mini:
+                newFlowers += i * (mini - flowers[-1])
+                mini = flowers[-1]
+
+            #Spend available newFlowers
+            while i < len(flowers) and (flowers[i] - mini) * i <= newFlowers:
+                newFlowers -= (flowers[i] - mini) * i
+                mini = flowers[i]
+                i += 1
+            mini += newFlowers // i
+            newFlowers %= i
+
+            #Update max beauty
+            maxi = max(maxi, (count + len(stack)) * full + min(mini, target - 1) * partial)
+        
+        return maxi
